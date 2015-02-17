@@ -1,0 +1,142 @@
+diff --git a/arch/arm/configs/bcm2709_defconfig b/arch/arm/configs/bcm2709_defconfig
+index d4c18fa..f21443d 100644
+--- a/arch/arm/configs/bcm2709_defconfig
++++ b/arch/arm/configs/bcm2709_defconfig
+@@ -795,6 +795,7 @@ CONFIG_SND_BCM2708_SOC_HIFIBERRY_DIGI=m
+ CONFIG_SND_BCM2708_SOC_HIFIBERRY_AMP=m
+ CONFIG_SND_BCM2708_SOC_RPI_DAC=m
+ CONFIG_SND_BCM2708_SOC_IQAUDIO_DAC=m
++CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC=m
+ CONFIG_SND_SIMPLE_CARD=m
+ CONFIG_SOUND_PRIME=m
+ CONFIG_HIDRAW=y
+diff --git a/arch/arm/configs/bcmrpi_defconfig b/arch/arm/configs/bcmrpi_defconfig
+index 898ebd2..0322a65 100644
+--- a/arch/arm/configs/bcmrpi_defconfig
++++ b/arch/arm/configs/bcmrpi_defconfig
+@@ -788,6 +788,7 @@ CONFIG_SND_BCM2708_SOC_HIFIBERRY_DIGI=m
+ CONFIG_SND_BCM2708_SOC_HIFIBERRY_AMP=m
+ CONFIG_SND_BCM2708_SOC_RPI_DAC=m
+ CONFIG_SND_BCM2708_SOC_IQAUDIO_DAC=m
++CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC=m
+ CONFIG_SND_SIMPLE_CARD=m
+ CONFIG_SOUND_PRIME=m
+ CONFIG_HIDRAW=y
+diff --git a/arch/arm/mach-bcm2708/bcm2708.c b/arch/arm/mach-bcm2708/bcm2708.c
+index 762e17c..e88f4e9 100644
+--- a/arch/arm/mach-bcm2708/bcm2708.c
++++ b/arch/arm/mach-bcm2708/bcm2708.c
+@@ -733,6 +733,24 @@ static struct i2c_board_info __initdata snd_pcm512x_i2c_devices[] = {
+ };
+ #endif
+ 
++#if defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC) || defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC_MODULE)
++static struct platform_device snd_duriosound_dac_device = {
++	.name = "snd-duriosound-dac",
++	.id = 0,
++	.num_resources = 0,
++};
++
++    /* already defined pcm5102a in HIFIBERRY  */
++	#if !(defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC) || defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC_MODULE))
++		static struct platform_device snd_pcm5102a_codec_device = {
++	        	.name = "pcm5102a-codec",
++		        .id = -1,
++			.num_resources = 0,
++				    
++	};
++    	#endif 
++#endif
++
+ int __init bcm_register_device(struct platform_device *pdev)
+ {
+ 	int ret;
+@@ -932,6 +950,13 @@ void __init bcm2708_init(void)
+         i2c_register_board_info_dt(1, snd_pcm512x_i2c_devices, ARRAY_SIZE(snd_pcm512x_i2c_devices));
+ #endif
+ 
++#if defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC) || defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC_MODULE)
++	bcm_register_device(&snd_duriosound_dac_device);
++	/* already defined pcm5102a in HIFIBERRY  */
++	#if !(defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC) || defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC_MODULE))
++		bcm_register_device(&snd_pcm5102a_codec_device);
++	#endif
++#endif
+ 
+ 	for (i = 0; i < ARRAY_SIZE(amba_devs); i++) {
+ 		struct amba_device *d = amba_devs[i];
+diff --git a/arch/arm/mach-bcm2709/bcm2709.c b/arch/arm/mach-bcm2709/bcm2709.c
+index 7e3affd..138f5e0 100644
+--- a/arch/arm/mach-bcm2709/bcm2709.c
++++ b/arch/arm/mach-bcm2709/bcm2709.c
+@@ -747,6 +747,22 @@ static struct platform_device snd_rpi_iqaudio_dac_device = {
+         .num_resources = 0,
+ };
+ 
++#if defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC) || defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC_MODULE)
++static struct platform_device snd_duriosound_dac_device = {
++        .name = "snd-duriosound-dac",
++        .id = 0,
++        .num_resources = 0,
++};
++	/* already defined pcm5102a in HIFIBERRY  */
++	#if !(defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC) || defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC_MODULE))
++		static struct platform_device snd_pcm5102a_codec_device = {
++        		.name = "pcm5102a-codec",
++        		.id = -1,
++        		.num_resources = 0,
++	};
++	#endif
++#endif
++
+ // Use the actual device name rather than generic driver name
+ static struct i2c_board_info __initdata snd_pcm512x_i2c_devices[] = {
+ 	{
+@@ -954,6 +970,14 @@ void __init bcm2709_init(void)
+         i2c_register_board_info_dt(1, snd_pcm512x_i2c_devices, ARRAY_SIZE(snd_pcm512x_i2c_devices));
+ #endif
+ 
++#if defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC) || defined(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC_MODULE)
++	bcm_register_device(&snd_duriosound_dac_device);
++    	/* already defined pcm5102a in HIFIBERRY  */
++    	#if !(defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC) || defined(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC_MODULE))
++        	bcm_register_device(&snd_pcm5102a_codec_device);
++    	#endif
++#endif
++
+ 
+ 	for (i = 0; i < ARRAY_SIZE(amba_devs); i++) {
+ 		struct amba_device *d = amba_devs[i];
+diff --git a/sound/soc/bcm/Kconfig b/sound/soc/bcm/Kconfig
+index 40d27c1..34be93e 100644
+--- a/sound/soc/bcm/Kconfig
++++ b/sound/soc/bcm/Kconfig
+@@ -60,3 +60,11 @@ config SND_BCM2708_SOC_IQAUDIO_DAC
+ 	select SND_SOC_PCM512x_I2C
+ 	help
+ 	  Say Y or M if you want to add support for IQaudIO-DAC.
++
++config SND_BCM2708_SOC_DURIOSOUND_DAC
++        tristate "Support for DurioSound DAC"
++        depends on SND_BCM2708_SOC_I2S
++        select SND_SOC_PCM5102A
++        help
++         Say Y or M if you want to add support for DurioSound DAC.
++
+diff --git a/sound/soc/bcm/Makefile b/sound/soc/bcm/Makefile
+index 17ea2b0..41487a6 100644
+--- a/sound/soc/bcm/Makefile
++++ b/sound/soc/bcm/Makefile
+@@ -15,6 +15,7 @@ snd-soc-hifiberry-digi-objs := hifiberry_digi.o
+ snd-soc-hifiberry-amp-objs := hifiberry_amp.o
+ snd-soc-rpi-dac-objs := rpi-dac.o
+ snd-soc-iqaudio-dac-objs := iqaudio-dac.o
++snd-soc-duriosound-dac-objs := duriosound-dac.o
+ 
+ obj-$(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DAC) += snd-soc-hifiberry-dac.o
+ obj-$(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DACPLUS) += snd-soc-hifiberry-dacplus.o
+@@ -22,3 +23,4 @@ obj-$(CONFIG_SND_BCM2708_SOC_HIFIBERRY_DIGI) += snd-soc-hifiberry-digi.o
+ obj-$(CONFIG_SND_BCM2708_SOC_HIFIBERRY_AMP) += snd-soc-hifiberry-amp.o
+ obj-$(CONFIG_SND_BCM2708_SOC_RPI_DAC) += snd-soc-rpi-dac.o
+ obj-$(CONFIG_SND_BCM2708_SOC_IQAUDIO_DAC) += snd-soc-iqaudio-dac.o
++obj-$(CONFIG_SND_BCM2708_SOC_DURIOSOUND_DAC) += snd-soc-duriosound-dac.o
